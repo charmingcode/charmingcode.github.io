@@ -1,4 +1,101 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-04-26T19:11:30+08:00</updated><id>/feed.xml</id><title type="html">Your awesome title</title><subtitle>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</subtitle><entry><title type="html">Welcome to Jekyll!</title><link href="/jekyll/update/2021/04/26/welcome-to-jekyll.html" rel="alternate" type="text/html" title="Welcome to Jekyll!" /><published>2021-04-26T19:08:24+08:00</published><updated>2021-04-26T19:08:24+08:00</updated><id>/jekyll/update/2021/04/26/welcome-to-jekyll</id><content type="html" xml:base="/jekyll/update/2021/04/26/welcome-to-jekyll.html">&lt;p&gt;You’ll find this post in your &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;_posts&lt;/code&gt; directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;jekyll serve&lt;/code&gt;, which launches a web server and auto-regenerates your site when a file is updated.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-04-27T09:17:51+08:00</updated><id>/feed.xml</id><title type="html">Your awesome title</title><subtitle>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</subtitle><entry><title type="html">Leveldb 源码分析</title><link href="/jekyll/update/2021/04/26/leveldb.html" rel="alternate" type="text/html" title="Leveldb 源码分析" /><published>2021-04-26T19:08:24+08:00</published><updated>2021-04-26T19:08:24+08:00</updated><id>/jekyll/update/2021/04/26/leveldb</id><content type="html" xml:base="/jekyll/update/2021/04/26/leveldb.html">&lt;h4 id=&quot;db&quot;&gt;DB&lt;/h4&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;|****************************************************|
+|                     DB  (DBImpl)                   |
+|*************************************************** |
+| Log File |   MemTable(mem/imm) |    VersionSet     |
+|*************************************************** |
+|                       |     Version(sst files)     |
+|*************************************************** |
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;font color=&quot;red&quot;&gt; A DB is a persistent ordered map from keys to values. &lt;/font&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;log_format&quot;&gt;LOG_FORMAT&lt;/h4&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;|****************************************|
+|                Log File                |
+|****************************************|
+|   LogWriter       |    LogReader       |
+|****************************************|
+|                Record                  |
+|****************************************|
+|       Fragment (FULL/MIDDLE/…)         |
+|****************************************|
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;version_set&quot;&gt;VERSION_SET&lt;/h4&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;|****************************************|           
+|          VersionSet(last_seq)          |				
+|****************************************|				
+|      Version     |     VersionEdit     |				
+|****************************************|
+|     TableCache   |      Log File       |
+|****************************************|
+|    TableIterator |                     |
+|****************************************|
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;version-edit 持久化数据结构，  version 为内存数据结构，双向链表。&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;TableCache cache的file handle/table handle。&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;有个疑问？&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;目前的version_set 对应的LOG,只有db open的时候才可能开一个新的manifest_file, 且持久化某个较新版本的version + version edit；&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;apply version edit感觉做麻烦了，直接copy一份vector 然后  insert/earse 不就完了？ 现在for …push_back 觉得不够简洁&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;font color=&quot;red&quot;&gt;注意：&lt;/font&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;其中versionset 中保存全局的Meta 一个状态，存在version_edit中，注意这里不是同memtable 的log以及对应的max_seq对齐的。&lt;/li&gt;
+  &lt;li&gt;功能上是没问题的，即recovery本身就是要找一个max_seq 而已， gap 一点无所谓（比如全局刚被写拿完seq,同时version_edit也拿了，此时version_edit log on disk了，但是写的数据还没wal成功。）&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;table_builderiterator&quot;&gt;TABLE_BUILDER/ITERATOR&lt;/h4&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;|*************************************************************************************|
+|                      TableBuilder                   |TableIterator(TwoLevelIterator)|
+|*************************************************************************************|
+|BlockBuilder(data/index/metaindex)|FilterBlockBuilder|	   BlockIterator(Index/Data)  |
+|*************************************************************************************|
+|                    Format (SSTFile)                 |        LRUCache               |
+|*************************************************************************************|
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;iterator&quot;&gt;ITERATOR&lt;/h4&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;|*********************************************|
+|                     DBIter                  |
+|*********************************************|
+|                 MergingIterator             | 
+|*********************************************|
+|     MemTableIterator |    TwoLevelIterator  |
+|*********************************************|
+|                      | LevelFileNumIterator |
+|*********************************************|
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;参考文献&quot;&gt;参考文献&lt;/h4&gt;
+
+&lt;p&gt;Check out the &lt;a href=&quot;https://jekyllrb.com/docs/home&quot;&gt;Jekyll docs&lt;/a&gt; for more info on how to get the most out of Jekyll. File all bugs/feature requests at &lt;a href=&quot;https://github.com/jekyll/jekyll&quot;&gt;Jekyll’s GitHub repo&lt;/a&gt;. If you have questions, you can ask them on &lt;a href=&quot;https://talk.jekyllrb.com/&quot;&gt;Jekyll Talk&lt;/a&gt;.&lt;/p&gt;</content><author><name></name></author><category term="jekyll" /><category term="update" /><summary type="html">DB</summary></entry><entry><title type="html">Welcome to Jekyll!</title><link href="/jekyll/update/2021/04/26/welcome-to-jekyll.html" rel="alternate" type="text/html" title="Welcome to Jekyll!" /><published>2021-04-26T19:08:24+08:00</published><updated>2021-04-26T19:08:24+08:00</updated><id>/jekyll/update/2021/04/26/welcome-to-jekyll</id><content type="html" xml:base="/jekyll/update/2021/04/26/welcome-to-jekyll.html">&lt;p&gt;You’ll find this post in your &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;_posts&lt;/code&gt; directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;jekyll serve&lt;/code&gt;, which launches a web server and auto-regenerates your site when a file is updated.&lt;/p&gt;
 
 &lt;p&gt;Jekyll requires blog post files to be named according to the following format:&lt;/p&gt;
 

@@ -1,0 +1,102 @@
+---
+layout: post
+title:  "Leveldb 源码分析"
+date:   2021-04-26 19:08:24 +0800
+categories: jekyll update
+---
+
+#### DB
+
+```
+|****************************************************|
+|                     DB  (DBImpl)                   |
+|*************************************************** |
+| Log File |   MemTable(mem/imm) |    VersionSet     |
+|*************************************************** |
+|                       |     Version(sst files)     |
+|*************************************************** |
+```
+<font color='red'> A DB is a persistent ordered map from keys to values. </font>
+<br/>
+
+#### LOG_FORMAT
+
+```
+|****************************************|
+|                Log File                |
+|****************************************|
+|   LogWriter       |    LogReader       |
+|****************************************|
+|                Record                  |
+|****************************************|
+|       Fragment (FULL/MIDDLE/…)         |
+|****************************************|
+```
+<br/>
+
+#### VERSION_SET
+
+```
+|****************************************|           
+|          VersionSet(last_seq)          |				
+|****************************************|				
+|      Version     |     VersionEdit     |				
+|****************************************|
+|     TableCache   |      Log File       |
+|****************************************|
+|    TableIterator |                     |
+|****************************************|
+```
+
+* version-edit 持久化数据结构，  version 为内存数据结构，双向链表。
+
+* TableCache cache的file handle/table handle。
+
+有个疑问？	
+
+1. 目前的version_set 对应的LOG,只有db open的时候才可能开一个新的manifest_file, 且持久化某个较新版本的version + version edit； 
+
+2. apply version edit感觉做麻烦了，直接copy一份vector 然后  insert/earse 不就完了？ 现在for …push_back 觉得不够简洁
+
+<font color='red'>注意：</font>
+
+* 其中versionset 中保存全局的Meta 一个状态，存在version_edit中，注意这里不是同memtable 的log以及对应的max_seq对齐的。
+* 功能上是没问题的，即recovery本身就是要找一个max_seq 而已， gap 一点无所谓（比如全局刚被写拿完seq,同时version_edit也拿了，此时version_edit log on disk了，但是写的数据还没wal成功。）
+
+<br/>
+
+#### TABLE_BUILDER/ITERATOR
+
+```
+|*************************************************************************************|
+|                      TableBuilder                   |TableIterator(TwoLevelIterator)|
+|*************************************************************************************|
+|BlockBuilder(data/index/metaindex)|FilterBlockBuilder|	   BlockIterator(Index/Data)  |
+|*************************************************************************************|
+|                    Format (SSTFile)                 |        LRUCache               |
+|*************************************************************************************|
+```
+<br/>
+
+#### ITERATOR
+
+```
+|*********************************************|
+|                     DBIter                  |
+|*********************************************|
+|                 MergingIterator             | 
+|*********************************************|
+|     MemTableIterator |    TwoLevelIterator  |
+|*********************************************|
+|                      | LevelFileNumIterator |
+|*********************************************|
+```
+<br/>
+
+#### 参考文献
+
+Check out the [Jekyll docs][jekyll-docs] for more info on how to get the most out of Jekyll. File all bugs/feature requests at [Jekyll’s GitHub repo][jekyll-gh]. If you have questions, you can ask them on [Jekyll Talk][jekyll-talk].
+
+[jekyll-docs]: https://jekyllrb.com/docs/home
+[jekyll-gh]:   https://github.com/jekyll/jekyll
+[jekyll-talk]: https://talk.jekyllrb.com/

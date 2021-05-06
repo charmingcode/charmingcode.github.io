@@ -1,4 +1,32 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-04-27T09:17:51+08:00</updated><id>/feed.xml</id><title type="html">Your awesome title</title><subtitle>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</subtitle><entry><title type="html">Leveldb 源码分析</title><link href="/jekyll/update/2021/04/26/leveldb.html" rel="alternate" type="text/html" title="Leveldb 源码分析" /><published>2021-04-26T19:08:24+08:00</published><updated>2021-04-26T19:08:24+08:00</updated><id>/jekyll/update/2021/04/26/leveldb</id><content type="html" xml:base="/jekyll/update/2021/04/26/leveldb.html">&lt;h4 id=&quot;db&quot;&gt;DB&lt;/h4&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-05-06T19:33:05+08:00</updated><id>/feed.xml</id><title type="html">Charming code world</title><subtitle>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</subtitle><entry><title type="html">Leveldb 源码分析 - snapshot</title><link href="/jekyll/update/2021/05/05/leveldb-snapshot.html" rel="alternate" type="text/html" title="Leveldb 源码分析 - snapshot" /><published>2021-05-05T21:22:24+08:00</published><updated>2021-05-05T21:22:24+08:00</updated><id>/jekyll/update/2021/05/05/leveldb-snapshot</id><content type="html" xml:base="/jekyll/update/2021/05/05/leveldb-snapshot.html">&lt;h4 id=&quot;api&quot;&gt;API&lt;/h4&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-c--&quot; data-lang=&quot;c++&quot;&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Snapshot&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DBImpl&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GetSnapshot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+   &lt;span class=&quot;n&quot;&gt;MutexLock&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mutex_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+   &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;snapshots_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;New&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;versions_&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;LastSequence&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+ 
+&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DBImpl&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ReleaseSnapshot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Snapshot&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+   &lt;span class=&quot;n&quot;&gt;MutexLock&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mutex_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+   &lt;span class=&quot;n&quot;&gt;snapshots_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Delete&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;reinterpret_cast&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SnapshotImpl&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;行级别的snapshot / compact；  gc策略要耦合 smallest_snapshot seq 的 ; 
+缺点就是仅分了两个组，一个是 &amp;lt;= smallest_snapshot_seq 一个是&amp;gt; smallest_snapshot_seq 数据集；&lt;/p&gt;
+
+&lt;p&gt;另外由于snapshot_seq的存在，导致compact中的delete marker 不能轻易删除了，只能判断大level无此数据才能delete.&lt;/p&gt;
+
+&lt;p&gt;这里面如果要设计多版本的话，多版本中的delete marker 即使当前的compact 中有当前row key的更大version的非delete row，此时的delete marker,也不能purge。&lt;/p&gt;
+
+&lt;p&gt;重要的delete 逻辑 以及delete的marker purge策略；
+非delete marker , 仅保留在 smallest_snapshot中的最大version( max_versions = 1)
+delte marker （要判断这个是当前smallest_snapshot中的最大version的row，且保证high level 无data，即后面没有比这个小的version 的row 需要此row delete marker gc的数据。）&lt;/p&gt;
+
+&lt;p&gt;文件级别的 snapshot / compact 
+缺点：如果snapshot 过多会存在大量文件无法进行compact&lt;/p&gt;
+
+&lt;p&gt;思考：
+另外目前的leveldb 实现的snapshot 是 没有持久化的。
+有了snapshot 全局的计算逻辑/比如preAgg/rollup/delete-marker/data gc 都要考虑对snapshot的影响。&lt;/p&gt;</content><author><name></name></author><category term="jekyll" /><category term="update" /><summary type="html">API</summary></entry><entry><title type="html">Leveldb 源码分析 - 抽象综述</title><link href="/jekyll/update/2021/04/26/leveldb.html" rel="alternate" type="text/html" title="Leveldb 源码分析 - 抽象综述" /><published>2021-04-26T19:08:24+08:00</published><updated>2021-04-26T19:08:24+08:00</updated><id>/jekyll/update/2021/04/26/leveldb</id><content type="html" xml:base="/jekyll/update/2021/04/26/leveldb.html">&lt;h4 id=&quot;db&quot;&gt;DB&lt;/h4&gt;
 
 &lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;|****************************************************|
 |                     DB  (DBImpl)                   |
@@ -47,23 +75,22 @@
   &lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;有个疑问？&lt;/p&gt;
+&lt;font color=&quot;red&quot;&gt;思考：&lt;/font&gt;
 
 &lt;ol&gt;
   &lt;li&gt;
-    &lt;p&gt;目前的version_set 对应的LOG,只有db open的时候才可能开一个新的manifest_file, 且持久化某个较新版本的version + version edit；&lt;/p&gt;
+    &lt;p&gt;目前的version_set 对应的LOG,只有db open的时候才可能开一个新的manifest_file, 且持久化某个较新版本的version + version edit。&lt;/p&gt;
   &lt;/li&gt;
   &lt;li&gt;
-    &lt;p&gt;apply version edit感觉做麻烦了，直接copy一份vector 然后  insert/earse 不就完了？ 现在for …push_back 觉得不够简洁&lt;/p&gt;
+    &lt;p&gt;apply version edit感觉做麻烦了，直接copy一份vector 然后  insert/earse 不就完了？ 现在for …push_back 觉得不够简洁。&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;其中versionset 中保存全局的Meta 一个状态，存在version_edit中，注意这里不是同memtable 的log以及对应的max_seq对齐的。&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;功能上是没问题的，即recovery本身就是要找一个max_seq 而已， gap 一点无所谓（比如全局刚被写拿完seq,同时version_edit也拿了，此时version_edit log on disk了，但是写的数据还没wal成功。）&lt;/p&gt;
   &lt;/li&gt;
 &lt;/ol&gt;
-
-&lt;font color=&quot;red&quot;&gt;注意：&lt;/font&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;其中versionset 中保存全局的Meta 一个状态，存在version_edit中，注意这里不是同memtable 的log以及对应的max_seq对齐的。&lt;/li&gt;
-  &lt;li&gt;功能上是没问题的，即recovery本身就是要找一个max_seq 而已， gap 一点无所谓（比如全局刚被写拿完seq,同时version_edit也拿了，此时version_edit log on disk了，但是写的数据还没wal成功。）&lt;/li&gt;
-&lt;/ul&gt;
 
 &lt;p&gt;&lt;br /&gt;&lt;/p&gt;
 
@@ -77,6 +104,18 @@
 |                    Format (SSTFile)                 |        LRUCache               |
 |*************************************************************************************|
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;font color=&quot;red&quot;&gt;思考：&lt;/font&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;这里的 TwoLevelIterator 可以等价描述为 一个sst file iterator。&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;leveldb的设计是一个table 划分的足够小，所以一个table 对应一个index_block,  filter_block，且生命周期同table一致，table open/dtor 其跟随着创建与销毁，只有data_block是read+lru_cache 的，且注意lru_cache 需要管理handle的ref.  而cache_handle 是block_iterator的析构进行管理。&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
 &lt;p&gt;&lt;br /&gt;&lt;/p&gt;
 
 &lt;h4 id=&quot;iterator&quot;&gt;ITERATOR&lt;/h4&gt;
@@ -91,24 +130,35 @@
 |                      | LevelFileNumIterator |
 |*********************************************|
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;MergingIterator吐出的是全版本, DBIter 执行了关键的FindNextUserEntry/FindPrevUserEntry, 进行 seq 过滤以及 相同user_key的 Entry hidden。&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;数据在磁盘上的物理顺序为， order by user_key asc, seq desc。&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;MergingIterator 这一层注册了version 的 Unref callback, 即MergingIterator 析构时候触发。&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;font color=&quot;red&quot;&gt;思考：&lt;/font&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;TwoLevelIterator 的设计有点巧妙，其中用到了两层关系.
+    &lt;ul&gt;
+      &lt;li&gt;level files 抽象为Iterator， 通过level file iterator -&amp;gt;  file iterator(table iterator)。&lt;/li&gt;
+      &lt;li&gt;table iterator 也是两级iterator，即通过 index_block_iterator -&amp;gt;  data_block_iterator。&lt;/li&gt;
+      &lt;li&gt;其中Iterator 的Next / Prev 设计还是很巧妙的, 通过一个direction来标识当前的state是属于哪个方向的。&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
 &lt;p&gt;&lt;br /&gt;&lt;/p&gt;
 
 &lt;h4 id=&quot;参考文献&quot;&gt;参考文献&lt;/h4&gt;
 
-&lt;p&gt;Check out the &lt;a href=&quot;https://jekyllrb.com/docs/home&quot;&gt;Jekyll docs&lt;/a&gt; for more info on how to get the most out of Jekyll. File all bugs/feature requests at &lt;a href=&quot;https://github.com/jekyll/jekyll&quot;&gt;Jekyll’s GitHub repo&lt;/a&gt;. If you have questions, you can ask them on &lt;a href=&quot;https://talk.jekyllrb.com/&quot;&gt;Jekyll Talk&lt;/a&gt;.&lt;/p&gt;</content><author><name></name></author><category term="jekyll" /><category term="update" /><summary type="html">DB</summary></entry><entry><title type="html">Welcome to Jekyll!</title><link href="/jekyll/update/2021/04/26/welcome-to-jekyll.html" rel="alternate" type="text/html" title="Welcome to Jekyll!" /><published>2021-04-26T19:08:24+08:00</published><updated>2021-04-26T19:08:24+08:00</updated><id>/jekyll/update/2021/04/26/welcome-to-jekyll</id><content type="html" xml:base="/jekyll/update/2021/04/26/welcome-to-jekyll.html">&lt;p&gt;You’ll find this post in your &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;_posts&lt;/code&gt; directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;jekyll serve&lt;/code&gt;, which launches a web server and auto-regenerates your site when a file is updated.&lt;/p&gt;
-
-&lt;p&gt;Jekyll requires blog post files to be named according to the following format:&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;YEAR-MONTH-DAY-title.MARKUP&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Where &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;YEAR&lt;/code&gt; is a four-digit number, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MONTH&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DAY&lt;/code&gt; are both two-digit numbers, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MARKUP&lt;/code&gt; is the file extension representing the format used in the file. After that, include the necessary front matter. Take a look at the source for this post to get an idea about how it works.&lt;/p&gt;
-
-&lt;p&gt;Jekyll also offers powerful support for code snippets:&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ruby&quot; data-lang=&quot;ruby&quot;&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;print_hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-  &lt;span class=&quot;nb&quot;&gt;puts&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Hi, &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;#{&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;print_hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'Tom'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;#=&amp;gt; prints 'Hi, Tom' to STDOUT.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;Check out the &lt;a href=&quot;https://jekyllrb.com/docs/home&quot;&gt;Jekyll docs&lt;/a&gt; for more info on how to get the most out of Jekyll. File all bugs/feature requests at &lt;a href=&quot;https://github.com/jekyll/jekyll&quot;&gt;Jekyll’s GitHub repo&lt;/a&gt;. If you have questions, you can ask them on &lt;a href=&quot;https://talk.jekyllrb.com/&quot;&gt;Jekyll Talk&lt;/a&gt;.&lt;/p&gt;</content><author><name></name></author><category term="jekyll" /><category term="update" /><summary type="html">You’ll find this post in your _posts directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run jekyll serve, which launches a web server and auto-regenerates your site when a file is updated.</summary></entry></feed>
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/google/leveldb/blob/master/doc/log_format.md&quot;&gt;Log format&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;</content><author><name></name></author><category term="jekyll" /><category term="update" /><summary type="html">DB</summary></entry></feed>

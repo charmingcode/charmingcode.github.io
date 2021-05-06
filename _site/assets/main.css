@@ -1,3 +1,4 @@
+@charset "UTF-8";
 /** Reset some basic elements */
 body, h1, h2, h3, h4, h5, h6, p, blockquote, pre, hr, dl, dd, ol, ul, figure { margin: 0; padding: 0; }
 
@@ -5,7 +6,7 @@ body, h1, h2, h3, h4, h5, h6, p, blockquote, pre, hr, dl, dd, ol, ul, figure { m
 body { font: 400 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; color: #111; background-color: #fdfdfd; -webkit-text-size-adjust: 100%; -webkit-font-feature-settings: "kern" 1; -moz-font-feature-settings: "kern" 1; -o-font-feature-settings: "kern" 1; font-feature-settings: "kern" 1; font-kerning: normal; display: flex; min-height: 100vh; flex-direction: column; }
 
 /** Set `margin-bottom` to maintain vertical rhythm */
-h1, h2, h3, h4, h5, h6, p, blockquote, pre, ul, ol, dl, figure, .highlight { margin-bottom: 15px; }
+h1, h2, h3, h4, h5, h6, p, blockquote, pre, ul, ol, dl, figure { margin-bottom: 15px; }
 
 /** `main` element */
 main { display: block; /* Default value of `display` of `main` element is 'inline' in IE 11. */ }
@@ -43,7 +44,7 @@ blockquote { color: #828282; border-left: 4px solid #e8e8e8; padding-left: 15px;
 blockquote > :last-child { margin-bottom: 0; }
 
 /** Code formatting */
-pre, code { font-size: 15px; border: 1px solid #e8e8e8; border-radius: 3px; background-color: #eef; }
+pre, code { font-size: 15px; border: 1px solid #e8e8e8; border-radius: 3px; }
 
 code { padding: 1px 5px; }
 
@@ -151,127 +152,134 @@ table td { border: 1px solid #e8e8e8; }
 
 @media screen and (max-width: 800px) { .post-content h4 { font-size: 18px; } }
 
-/** Syntax highlighting styles */
-.highlight { background: #fff; }
+/*
+作者：kun huang
+链接：https://www.zhihu.com/question/37544467/answer/74524133
+来源：知乎
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+*/
+.highlight { margin-bottom: 1.5em; color: #d0d0d0; background-color: #272822; /* Comment */ /* Error */ /* Keyword */ /* Literal */ /* Name */ /* Operator */ /* Punctuation */ /* Comment.Multiline */ /* Comment.Preproc */ /* Comment.Single */ /* Comment.Special */ /* Generic.Emph */ /* Generic.Strong */ /* Keyword.Constant */ /* Keyword.Declaration */ /* Keyword.Namespace */ /* Keyword.Pseudo */ /* Keyword.Reserved */ /* Keyword.Type */ /* Literal.Date */ /* Literal.Number */ /* Literal.String */ /* Name.Attribute */ /* Name.Builtin */ /* Name.Class */ /* Name.Constant */ /* Name.Decorator */ /* Name.Entity */ /* Name.Exception */ /* Name.Function */ /* Name.Label */ /* Name.Namespace */ /* Name.Other */ /* Name.Property */ /* Name.Tag */ /* Name.Variable */ /* Operator.Word */ /* Text.Whitespace */ /* Literal.Number.Float */ /* Literal.Number.Hex */ /* Literal.Number.Integer */ /* Literal.Number.Oct */ /* Literal.String.Backtick */ /* Literal.String.Char */ /* Literal.String.Doc */ /* Literal.String.Double */ /* Literal.String.Escape */ /* Literal.String.Heredoc */ /* Literal.String.Interpol */ /* Literal.String.Other */ /* Literal.String.Regex */ /* Literal.String.Single */ /* Literal.String.Symbol */ /* Name.Builtin.Pseudo */ /* Name.Variable.Class */ /* Name.Variable.Global */ /* Name.Variable.Instance */ /* Literal.Number.Integer.Long */ }
 
-.highlighter-rouge .highlight { background: #eef; }
+.highlight pre { position: relative; margin: 0; padding: 1em; }
 
-.highlight .c { color: #998; font-style: italic; }
+.highlight .lineno { padding-right: 24px; color: #8f908a; }
 
-.highlight .err { color: #a61717; background-color: #e3d2d2; }
+.highlight .hll { background-color: #49483e; }
 
-.highlight .k { font-weight: bold; }
+.highlight .c { color: #75715e; }
 
-.highlight .o { font-weight: bold; }
+.highlight .err { color: #960050; background-color: #1e0010; }
 
-.highlight .cm { color: #998; font-style: italic; }
+.highlight .k { color: #66d9ef; }
 
-.highlight .cp { color: #999; font-weight: bold; }
+.highlight .l { color: #ae81ff; }
 
-.highlight .c1 { color: #998; font-style: italic; }
+.highlight .n { color: #f8f8f2; }
 
-.highlight .cs { color: #999; font-weight: bold; font-style: italic; }
+.highlight .o { color: #f92672; }
 
-.highlight .gd { color: #000; background-color: #fdd; }
+.highlight .p { color: #f8f8f2; }
 
-.highlight .gd .x { color: #000; background-color: #faa; }
+.highlight .cm { color: #75715e; }
+
+.highlight .cp { color: #75715e; }
+
+.highlight .c1 { color: #75715e; }
+
+.highlight .cs { color: #75715e; }
 
 .highlight .ge { font-style: italic; }
 
-.highlight .gr { color: #a00; }
-
-.highlight .gh { color: #999; }
-
-.highlight .gi { color: #000; background-color: #dfd; }
-
-.highlight .gi .x { color: #000; background-color: #afa; }
-
-.highlight .go { color: #888; }
-
-.highlight .gp { color: #555; }
-
 .highlight .gs { font-weight: bold; }
 
-.highlight .gu { color: #aaa; }
+.highlight .kc { color: #66d9ef; }
 
-.highlight .gt { color: #a00; }
+.highlight .kd { color: #66d9ef; }
 
-.highlight .kc { font-weight: bold; }
+.highlight .kn { color: #f92672; }
 
-.highlight .kd { font-weight: bold; }
+.highlight .kp { color: #66d9ef; }
 
-.highlight .kp { font-weight: bold; }
+.highlight .kr { color: #66d9ef; }
 
-.highlight .kr { font-weight: bold; }
+.highlight .kt { color: #66d9ef; }
 
-.highlight .kt { color: #458; font-weight: bold; }
+.highlight .ld { color: #e6db74; }
 
-.highlight .m { color: #099; }
+.highlight .m { color: #ae81ff; }
 
-.highlight .s { color: #d14; }
+.highlight .s { color: #e6db74; }
 
-.highlight .na { color: #008080; }
+.highlight .na { color: #a6e22e; }
 
-.highlight .nb { color: #0086B3; }
+.highlight .nb { color: #f8f8f2; }
 
-.highlight .nc { color: #458; font-weight: bold; }
+.highlight .nc { color: #a6e22e; }
 
-.highlight .no { color: #008080; }
+.highlight .no { color: #66d9ef; }
 
-.highlight .ni { color: #800080; }
+.highlight .nd { color: #a6e22e; }
 
-.highlight .ne { color: #900; font-weight: bold; }
+.highlight .ni { color: #f8f8f2; }
 
-.highlight .nf { color: #900; font-weight: bold; }
+.highlight .ne { color: #a6e22e; }
 
-.highlight .nn { color: #555; }
+.highlight .nf { color: #a6e22e; }
 
-.highlight .nt { color: #000080; }
+.highlight .nl { color: #f8f8f2; }
 
-.highlight .nv { color: #008080; }
+.highlight .nn { color: #f8f8f2; }
 
-.highlight .ow { font-weight: bold; }
+.highlight .nx { color: #a6e22e; }
 
-.highlight .w { color: #bbb; }
+.highlight .py { color: #f8f8f2; }
 
-.highlight .mf { color: #099; }
+.highlight .nt { color: #f92672; }
 
-.highlight .mh { color: #099; }
+.highlight .nv { color: #f8f8f2; }
 
-.highlight .mi { color: #099; }
+.highlight .ow { color: #f92672; }
 
-.highlight .mo { color: #099; }
+.highlight .w { color: #f8f8f2; }
 
-.highlight .sb { color: #d14; }
+.highlight .mf { color: #ae81ff; }
 
-.highlight .sc { color: #d14; }
+.highlight .mh { color: #ae81ff; }
 
-.highlight .sd { color: #d14; }
+.highlight .mi { color: #ae81ff; }
 
-.highlight .s2 { color: #d14; }
+.highlight .mo { color: #ae81ff; }
 
-.highlight .se { color: #d14; }
+.highlight .sb { color: #e6db74; }
 
-.highlight .sh { color: #d14; }
+.highlight .sc { color: #e6db74; }
 
-.highlight .si { color: #d14; }
+.highlight .sd { color: #e6db74; }
 
-.highlight .sx { color: #d14; }
+.highlight .s2 { color: #e6db74; }
 
-.highlight .sr { color: #009926; }
+.highlight .se { color: #ae81ff; }
 
-.highlight .s1 { color: #d14; }
+.highlight .sh { color: #e6db74; }
 
-.highlight .ss { color: #990073; }
+.highlight .si { color: #e6db74; }
 
-.highlight .bp { color: #999; }
+.highlight .sx { color: #e6db74; }
 
-.highlight .vc { color: #008080; }
+.highlight .sr { color: #e6db74; }
 
-.highlight .vg { color: #008080; }
+.highlight .s1 { color: #e6db74; }
 
-.highlight .vi { color: #008080; }
+.highlight .ss { color: #e6db74; }
 
-.highlight .il { color: #099; }
+.highlight .bp { color: #f8f8f2; }
+
+.highlight .vc { color: #f8f8f2; }
+
+.highlight .vg { color: #f8f8f2; }
+
+.highlight .vi { color: #f8f8f2; }
+
+.highlight .il { color: #ae81ff; }
 
 /*# sourceMappingURL=main.css.map */

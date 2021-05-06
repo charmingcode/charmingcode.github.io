@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-05-06T19:33:05+08:00</updated><id>/feed.xml</id><title type="html">Charming code world</title><subtitle>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</subtitle><entry><title type="html">Leveldb 源码分析 - snapshot</title><link href="/jekyll/update/2021/05/05/leveldb-snapshot.html" rel="alternate" type="text/html" title="Leveldb 源码分析 - snapshot" /><published>2021-05-05T21:22:24+08:00</published><updated>2021-05-05T21:22:24+08:00</updated><id>/jekyll/update/2021/05/05/leveldb-snapshot</id><content type="html" xml:base="/jekyll/update/2021/05/05/leveldb-snapshot.html">&lt;h4 id=&quot;api&quot;&gt;API&lt;/h4&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-05-06T23:02:47+08:00</updated><id>/feed.xml</id><title type="html">Charming code world</title><subtitle>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</subtitle><entry><title type="html">Leveldb 源码分析 - snapshot</title><link href="/jekyll/update/2021/05/05/leveldb-snapshot.html" rel="alternate" type="text/html" title="Leveldb 源码分析 - snapshot" /><published>2021-05-05T21:22:24+08:00</published><updated>2021-05-05T21:22:24+08:00</updated><id>/jekyll/update/2021/05/05/leveldb-snapshot</id><content type="html" xml:base="/jekyll/update/2021/05/05/leveldb-snapshot.html">&lt;h3 id=&quot;api&quot;&gt;API&lt;/h3&gt;
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-c--&quot; data-lang=&quot;c++&quot;&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Snapshot&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DBImpl&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GetSnapshot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
    &lt;span class=&quot;n&quot;&gt;MutexLock&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mutex_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
@@ -10,23 +10,97 @@
    &lt;span class=&quot;n&quot;&gt;snapshots_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Delete&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;reinterpret_cast&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SnapshotImpl&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
-&lt;p&gt;行级别的snapshot / compact；  gc策略要耦合 smallest_snapshot seq 的 ; 
-缺点就是仅分了两个组，一个是 &amp;lt;= smallest_snapshot_seq 一个是&amp;gt; smallest_snapshot_seq 数据集；&lt;/p&gt;
+&lt;h3 id=&quot;snapshot-使用者视角&quot;&gt;SnapShot 使用者视角&lt;/h3&gt;
 
-&lt;p&gt;另外由于snapshot_seq的存在，导致compact中的delete marker 不能轻易删除了，只能判断大level无此数据才能delete.&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;不能指定时间点，仅支持当前的时间点的snapshot构建，因为历史时间存在compact&lt;/li&gt;
+  &lt;li&gt;某个snapshot对应的时间点的存量数据读取
+    &lt;ul&gt;
+      &lt;li&gt;数据比较&lt;/li&gt;
+      &lt;li&gt;存量数据的索引构建&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;存量数据依然可以TTL （看设计的snapshot语义）&lt;/li&gt;
+  &lt;li&gt;leveldb的实现不支持snapshot的持久化&lt;/li&gt;
+&lt;/ol&gt;
 
-&lt;p&gt;这里面如果要设计多版本的话，多版本中的delete marker 即使当前的compact 中有当前row key的更大version的非delete row，此时的delete marker,也不能purge。&lt;/p&gt;
+&lt;h3 id=&quot;snapshot-设计&quot;&gt;SnapShot 设计&lt;/h3&gt;
 
-&lt;p&gt;重要的delete 逻辑 以及delete的marker purge策略；
-非delete marker , 仅保留在 smallest_snapshot中的最大version( max_versions = 1)
-delte marker （要判断这个是当前smallest_snapshot中的最大version的row，且保证high level 无data，即后面没有比这个小的version 的row 需要此row delete marker gc的数据。）&lt;/p&gt;
+&lt;p&gt;Snapshot的设计核心在于compact中对于GC策略的影响。&lt;/p&gt;
 
-&lt;p&gt;文件级别的 snapshot / compact 
-缺点：如果snapshot 过多会存在大量文件无法进行compact&lt;/p&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-c--&quot; data-lang=&quot;c++&quot;&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;snapshots_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;empty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+   &lt;span class=&quot;n&quot;&gt;compact&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;smallest_snapshot&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;versions_&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;LastSequence&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+   &lt;span class=&quot;n&quot;&gt;compact&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;smallest_snapshot&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;snapshots_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;oldest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sequence_number&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 
-&lt;p&gt;思考：
-另外目前的leveldb 实现的snapshot 是 没有持久化的。
-有了snapshot 全局的计算逻辑/比如preAgg/rollup/delete-marker/data gc 都要考虑对snapshot的影响。&lt;/p&gt;</content><author><name></name></author><category term="jekyll" /><category term="update" /><summary type="html">API</summary></entry><entry><title type="html">Leveldb 源码分析 - 抽象综述</title><link href="/jekyll/update/2021/04/26/leveldb.html" rel="alternate" type="text/html" title="Leveldb 源码分析 - 抽象综述" /><published>2021-04-26T19:08:24+08:00</published><updated>2021-04-26T19:08:24+08:00</updated><id>/jekyll/update/2021/04/26/leveldb</id><content type="html" xml:base="/jekyll/update/2021/04/26/leveldb.html">&lt;h4 id=&quot;db&quot;&gt;DB&lt;/h4&gt;
+&lt;span class=&quot;n&quot;&gt;Iterator&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;input&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;versions_&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MakeInputIterator&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;compact&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;compaction&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;SequenceNumber&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;last_sequence_for_key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;kMaxSequenceNumber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+ &lt;span class=&quot;c1&quot;&gt;// Handle key/value, add to state, etc.&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;drop&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ParseInternalKey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;key&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ikey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;c1&quot;&gt;// Do not hide error keys&lt;/span&gt;
+      &lt;span class=&quot;n&quot;&gt;current_user_key&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clear&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+      &lt;span class=&quot;n&quot;&gt;has_current_user_key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+      &lt;span class=&quot;n&quot;&gt;last_sequence_for_key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;kMaxSequenceNumber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;has_current_user_key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;||&lt;/span&gt;
+          &lt;span class=&quot;n&quot;&gt;user_comparator&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Compare&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ikey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;user_key&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                     &lt;span class=&quot;n&quot;&gt;Slice&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;current_user_key&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// First occurrence of this user key&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;current_user_key&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;assign&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ikey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;user_key&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ikey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;user_key&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;has_current_user_key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;last_sequence_for_key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;kMaxSequenceNumber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+      &lt;span class=&quot;c1&quot;&gt;// 在非多version的系统下，同一个row key的不同version，&lt;/span&gt;
+      &lt;span class=&quot;c1&quot;&gt;// 在一个snapshot内仅保留当前snapshot内最大version即可。&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;last_sequence_for_key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;compact&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;smallest_snapshot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// Hidden by an newer entry for same user key&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;drop&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;    &lt;span class=&quot;c1&quot;&gt;// (A)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ikey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;kTypeDeletion&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt;
+                 &lt;span class=&quot;n&quot;&gt;ikey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sequence&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;compact&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;smallest_snapshot&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt;
+                 &lt;span class=&quot;n&quot;&gt;compact&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;compaction&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;IsBaseLevelForKey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ikey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;user_key&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// kTypeDeletion的userkey的purge策略，只有保证其他未参与的sstfile，&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// 不再需要此delete marker 才可以purge。&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// For this user key:&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// (1) there is no data in higher levels&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// (2) data in lower levels will have larger sequence numbers&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// (3) data in layers that are being compacted here and have&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;//     smaller sequence numbers will be dropped in the next&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;//     few iterations of this loop (by rule (A) above).&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// Therefore this deletion marker is obsolete and can be dropped.&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;drop&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+      &lt;span class=&quot;n&quot;&gt;last_sequence_for_key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ikey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sequence&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;重要的delete 逻辑 以及delete的marker purge策略；&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;非delete marker , 仅保留在 smallest_snapshot中的最大version( max_versions = 1)&lt;/li&gt;
+  &lt;li&gt;delete marker （要判断这个是当前smallest_snapshot中的最大version的row，且保证high level 无data，即后面没有比这个小的version 的row 需要此row delete marker gc的数据。）&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;讨论&quot;&gt;讨论&lt;/h3&gt;
+&lt;p&gt;有了snapshot 全局的计算逻辑/比如preAgg/rollup/delete-marker/data gc 都要考虑对snapshot的影响。&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;行级别的snapshot
+    &lt;ul&gt;
+      &lt;li&gt;优点：内存空间占用少，一个snapshot仅记录一个seq即可，且不依赖mem-flush/compact pic，但是依赖seq;&lt;/li&gt;
+      &lt;li&gt;缺点：空间放大较大（如果想GC的更有效，GC策略复杂度大，所有的snapshot下的同一个userkey的最大version都要保留）
+ 仅分了两个组，一个是 &amp;lt;= smallest_snapshot_seq 一个是&amp;gt; smallest_snapshot_seq 数据集；且需要针对单user_key的gc策略产生影响——由于snapshot_seq的存在，导致compact中的delete marker 不能轻易删除了，只能判断大level无此数据才能delete.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;文件级别的 snapshot / compact 
+create snapshot时候 flush mem，一个snapshot为file list, 且持久化到manifest中
+    &lt;ul&gt;
+      &lt;li&gt;优点：不依赖seq，因为在compact pick时候已经分组，所以不影响compact的user-key gc逻辑就能较彻底的GC;因为snapshot引入的空间放大小。&lt;/li&gt;
+      &lt;li&gt;缺点：影响compact pick, 如果snapshot 过多会存在大量文件无法进行compact，导致文件数过多&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;</content><author><name></name></author><category term="jekyll" /><category term="update" /><summary type="html">API</summary></entry><entry><title type="html">Leveldb 源码分析 - 抽象综述</title><link href="/jekyll/update/2021/04/26/leveldb.html" rel="alternate" type="text/html" title="Leveldb 源码分析 - 抽象综述" /><published>2021-04-26T19:08:24+08:00</published><updated>2021-04-26T19:08:24+08:00</updated><id>/jekyll/update/2021/04/26/leveldb</id><content type="html" xml:base="/jekyll/update/2021/04/26/leveldb.html">&lt;h4 id=&quot;db&quot;&gt;DB&lt;/h4&gt;
 
 &lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;|****************************************************|
 |                     DB  (DBImpl)                   |

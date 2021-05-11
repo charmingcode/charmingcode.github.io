@@ -17,7 +17,7 @@
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Leveldb 源码分析 - snapshot" />
 <script type="application/ld+json">
-{"mainEntityOfPage":{"@type":"WebPage","@id":"/jekyll/update/2021/05/05/leveldb-snapshot.html"},"url":"/jekyll/update/2021/05/05/leveldb-snapshot.html","description":"API","dateModified":"2021-05-05T21:22:24+08:00","datePublished":"2021-05-05T21:22:24+08:00","headline":"Leveldb 源码分析 - snapshot","@type":"BlogPosting","@context":"https://schema.org"}</script>
+{"mainEntityOfPage":{"@type":"WebPage","@id":"/jekyll/update/2021/05/05/leveldb-snapshot.html"},"url":"/jekyll/update/2021/05/05/leveldb-snapshot.html","description":"API","headline":"Leveldb 源码分析 - snapshot","dateModified":"2021-05-05T21:22:24+08:00","datePublished":"2021-05-05T21:22:24+08:00","@type":"BlogPosting","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Charming code world" /></head>
 <body><header class="site-header" role="banner">
@@ -62,15 +62,10 @@
 <h3 id="snapshot-使用者视角">SnapShot 使用者视角</h3>
 
 <ol>
-  <li>不能指定时间点，仅支持当前的时间点的snapshot构建，因为历史时间存在compact</li>
-  <li>某个snapshot对应的时间点的存量数据读取
-    <ul>
-      <li>数据比较</li>
-      <li>存量数据的索引构建</li>
-    </ul>
-  </li>
+  <li>不能指定时间点，仅支持当前的时间点的snapshot构建，因为历史数据有可能已经被compact。</li>
+  <li>某个snapshot对应的时间点的存量数据读取，可以用来数据比较/存量数据的索引构建。</li>
   <li>存量数据依然可以TTL （看设计的snapshot语义）</li>
-  <li>leveldb的实现不支持snapshot的持久化</li>
+  <li>leveldb的实现的snapshot的未持久化</li>
 </ol>
 
 <h3 id="snapshot-设计">SnapShot 设计</h3>
@@ -125,32 +120,31 @@
       <span class="n">last_sequence_for_key</span> <span class="o">=</span> <span class="n">ikey</span><span class="p">.</span><span class="n">sequence</span><span class="p">;</span>
     <span class="p">}</span></code></pre></figure>
 
-<p>重要的delete 逻辑 以及delete的marker purge策略；</p>
+<p>重要的data gc逻辑 以及delete marker purge策略；</p>
 <ul>
-  <li>非delete marker , 仅保留在 smallest_snapshot中的最大version( max_versions = 1)</li>
-  <li>delete marker （要判断这个是当前smallest_snapshot中的最大version的row，且保证high level 无data，即后面没有比这个小的version 的row 需要此row delete marker gc的数据。）</li>
+  <li>data(非delete marker), 仅保留在 smallest_snapshot中的最大version( max_versions = 1)</li>
+  <li>delete marker （要判断这个是当前smallest_snapshot中的最大version的row，且保证high level 无data，即后面没有比这个小的version 的row 需要被此row delete marker gc的数据。）</li>
 </ul>
 
 <h3 id="讨论">讨论</h3>
 <p>有了snapshot 全局的计算逻辑/比如preAgg/rollup/delete-marker/data gc 都要考虑对snapshot的影响。</p>
 
 <ul>
-  <li>行级别的snapshot
+  <li>基于seq的snapshot（行级别）
     <ul>
       <li>优点：内存空间占用少，一个snapshot仅记录一个seq即可，且不依赖mem-flush/compact pic，但是依赖seq;</li>
       <li>缺点：空间放大较大（如果想GC的更有效，GC策略复杂度大，所有的snapshot下的同一个userkey的最大version都要保留）
  仅分了两个组，一个是 &lt;= smallest_snapshot_seq 一个是&gt; smallest_snapshot_seq 数据集；且需要针对单user_key的gc策略产生影响——由于snapshot_seq的存在，导致compact中的delete marker 不能轻易删除了，只能判断大level无此数据才能delete.</li>
     </ul>
   </li>
-  <li>文件级别的 snapshot / compact 
-create snapshot时候 flush mem，一个snapshot为file list, 且持久化到manifest中
+  <li>基于fileset的snapshot(文件级别)
+create snapshot时候trigger flush mem，一个snapshot为file list, 且持久化到manifest中
     <ul>
-      <li>优点：不依赖seq，因为在compact pick时候已经分组，所以不影响compact的user-key gc逻辑就能较彻底的GC;因为snapshot引入的空间放大小。</li>
-      <li>缺点：影响compact pick, 如果snapshot 过多会存在大量文件无法进行compact，导致文件数过多</li>
+      <li>优点：不依赖seq，因为在compact pick时候已经sst file分组，所以不影响compact的user-key gc逻辑就能较彻底的GC;相比基于行的snapshot,因为snapshot引入的空间放大小（基于行级别GC时候，仅以最小sapshot为界，try gc 老部分数据的集合；而基于fileset的可以多个fileset try gc）。</li>
+      <li>缺点：影响compact pick, 如果snapshot 过多会存在大量文件无法进行compact，导致文件数过多。</li>
     </ul>
   </li>
 </ul>
-
 
   </div><a class="u-url" href="/jekyll/update/2021/05/05/leveldb-snapshot.html" hidden></a>
 </article>

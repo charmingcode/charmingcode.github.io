@@ -1,4 +1,53 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-05-11T08:54:03+08:00</updated><id>/feed.xml</id><title type="html">Charming code world</title><subtitle>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</subtitle><entry><title type="html">Leveldb 源码分析 - snapshot</title><link href="/jekyll/update/2021/05/05/leveldb-snapshot.html" rel="alternate" type="text/html" title="Leveldb 源码分析 - snapshot" /><published>2021-05-05T21:22:24+08:00</published><updated>2021-05-05T21:22:24+08:00</updated><id>/jekyll/update/2021/05/05/leveldb-snapshot</id><content type="html" xml:base="/jekyll/update/2021/05/05/leveldb-snapshot.html">&lt;h3 id=&quot;api&quot;&gt;API&lt;/h3&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-05-25T10:40:14+08:00</updated><id>/feed.xml</id><title type="html">Charming code world</title><subtitle>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</subtitle><entry><title type="html">kubernetes - notes[WIP]</title><link href="/jekyll/update/2021/05/12/kubernetes-notes.html" rel="alternate" type="text/html" title="kubernetes - notes[WIP]" /><published>2021-05-12T10:08:24+08:00</published><updated>2021-05-12T10:08:24+08:00</updated><id>/jekyll/update/2021/05/12/kubernetes-notes</id><content type="html" xml:base="/jekyll/update/2021/05/12/kubernetes-notes.html">&lt;h1 id=&quot;前言&quot;&gt;前言&lt;/h1&gt;
+
+&lt;p&gt;kubernetes 是希腊文，意思是&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;舵手&lt;/code&gt;，带领我们安全地到达未知水域。首次接触基本了解是一个容器编排系统，但是有人称其为&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;数据中心操作系统&lt;/code&gt;，不解，故来进一步探索未知水域。&lt;/p&gt;
+
+&lt;p&gt;目前了解到的k8s诞生的背景，得益于微服务理念的兴起，由&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;垂直扩容&lt;/code&gt;改进为&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;水平扩容&lt;/code&gt;，当系统整体负载上升，需要弹性扩容的时候，如果是单体应用，那么扩容的成本大概率很大，因为可能仅仅是某个局部的处理逻辑产生了资源瓶颈需要扩容，比如磁盘、内存或者CPU,此时如果将单体系统，按照功能合理的拆分，在用户侧能直观的受益点就是，扩容成本可以下降，比如给耗CPU更多的处理微服务扩容计算机型或者给占用更多磁盘空间的微服务扩展存储机型； 从研发视角，架构更合理，每个微服务可以各自迭代。&lt;/p&gt;
+
+&lt;h1 id=&quot;重要概念&quot;&gt;重要概念&lt;/h1&gt;
+
+&lt;h2 id=&quot;pod&quot;&gt;POD&lt;/h2&gt;
+
+&lt;p&gt;为何需要pod关于为何需要pod这种容器？为何不直接使用容器？为何甚至需要同时运行多个容器？难道不能简单地把所有进程都放在一个单独的容器中吗？&lt;/p&gt;
+
+&lt;p&gt;接下来我们将一一回答上述问题。为何多个容器比单个容器中包含多个进程要好想象一个由多个进程组成的应用程序，无论是通过ipc（进程间通信）还是本地存储文件进行通信，都要求它们运行于同一台机器仁。在Kubemetes中，我们经常在容器中运行进程，由于每一个容器都非常像一台独立的机器，此时你可能认为在单个容器中运行多个进程是合乎逻辑的，然而在实践中这种做法并不合理。&lt;font color=&quot;red&quot;&gt;容器被设计为每个容器只运行一个进程（除非进程本身产生子进程）。如果在单个容器中运行多个不相关的进程，那么保持所有进程运行、管理它们的日志等将会是我们的责任。&lt;/font&gt;例如，我们需要包含一种在进程崩溃时能够自动重启的机制。同时这些进程都将记录到相同的标准输出中，而此时我们将很难确定每个进程分别记录了什么。综上所述，我们需要让每个进程运行于自己的容器中，而这就是&lt;font color=&quot;red&quot;&gt;Docker和Kubernetes期望使用的方式&lt;/font&gt;。&lt;/p&gt;
+
+&lt;p&gt;pod 也是&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;扩缩容的基本单位&lt;/code&gt;。&lt;/p&gt;
+
+&lt;p&gt;对于在生产中运行的pod，一定要定义一个存活探针&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;livenessProbe&lt;/code&gt;。没有探针的话，Kubernetes无法知道你的应用是否还活着。只要进程还在运行，Kubernetes会认为容器是健康。同样每个pod也可能有自己的owner，owner级联的GC策略，见文件2。&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h2 id=&quot;volume&quot;&gt;Volume&lt;/h2&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h2 id=&quot;service&quot;&gt;Service&lt;/h2&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h2 id=&quot;replicaset&quot;&gt;ReplicaSet&lt;/h2&gt;
+&lt;p&gt;了解ReplicaController，但是使用ReplcaSet 而不是ReplicaController&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h2 id=&quot;deployment&quot;&gt;Deployment&lt;/h2&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h2 id=&quot;statefulset&quot;&gt;StatefulSet&lt;/h2&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h2 id=&quot;crd&quot;&gt;CRD&lt;/h2&gt;
+
+&lt;h3 id=&quot;schema&quot;&gt;schema&lt;/h3&gt;
+
+&lt;h3 id=&quot;event&quot;&gt;event&lt;/h3&gt;
+
+&lt;h3 id=&quot;envtest&quot;&gt;envtest&lt;/h3&gt;
+
+&lt;h1 id=&quot;参考文献&quot;&gt;参考文献&lt;/h1&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;http://product.dangdang.com/26439199.html&quot;&gt;Kubernetes in action 中文版&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/&quot;&gt;Owners and dependents&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.kubebuilder.io/introduction.html&quot;&gt;Kubebuilder&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;</content><author><name></name></author><category term="jekyll" /><category term="update" /><summary type="html">前言</summary></entry><entry><title type="html">Leveldb 源码分析 - snapshot</title><link href="/jekyll/update/2021/05/05/leveldb-snapshot.html" rel="alternate" type="text/html" title="Leveldb 源码分析 - snapshot" /><published>2021-05-05T21:22:24+08:00</published><updated>2021-05-05T21:22:24+08:00</updated><id>/jekyll/update/2021/05/05/leveldb-snapshot</id><content type="html" xml:base="/jekyll/update/2021/05/05/leveldb-snapshot.html">&lt;h3 id=&quot;api&quot;&gt;API&lt;/h3&gt;
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-c--&quot; data-lang=&quot;c++&quot;&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Snapshot&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DBImpl&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GetSnapshot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
    &lt;span class=&quot;n&quot;&gt;MutexLock&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mutex_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;

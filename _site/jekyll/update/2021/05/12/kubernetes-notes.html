@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>kubernetes - notes[WIP] | Charming code world</title>
+<meta name="generator" content="Jekyll v4.2.0" />
+<meta property="og:title" content="kubernetes - notes[WIP]" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="前言" />
+<meta property="og:description" content="前言" />
+<link rel="canonical" href="/jekyll/update/2021/05/12/kubernetes-notes.html" />
+<meta property="og:url" content="/jekyll/update/2021/05/12/kubernetes-notes.html" />
+<meta property="og:site_name" content="Charming code world" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-05-12T10:08:24+08:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="kubernetes - notes[WIP]" />
+<script type="application/ld+json">
+{"mainEntityOfPage":{"@type":"WebPage","@id":"/jekyll/update/2021/05/12/kubernetes-notes.html"},"url":"/jekyll/update/2021/05/12/kubernetes-notes.html","description":"前言","dateModified":"2021-05-12T10:08:24+08:00","datePublished":"2021-05-12T10:08:24+08:00","headline":"kubernetes - notes[WIP]","@type":"BlogPosting","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Charming code world" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Charming code world</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">kubernetes - notes[WIP]</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2021-05-12T10:08:24+08:00" itemprop="datePublished">May 12, 2021
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1 id="前言">前言</h1>
+
+<p>kubernetes 是希腊文，意思是<code class="language-plaintext highlighter-rouge">舵手</code>，带领我们安全地到达未知水域。首次接触基本了解是一个容器编排系统，但是有人称其为<code class="language-plaintext highlighter-rouge">数据中心操作系统</code>，不解，故来进一步探索未知水域。</p>
+
+<p>目前了解到的k8s诞生的背景，得益于微服务理念的兴起，由<code class="language-plaintext highlighter-rouge">垂直扩容</code>改进为<code class="language-plaintext highlighter-rouge">水平扩容</code>，当系统整体负载上升，需要弹性扩容的时候，如果是单体应用，那么扩容的成本大概率很大，因为可能仅仅是某个局部的处理逻辑产生了资源瓶颈需要扩容，比如磁盘、内存或者CPU,此时如果将单体系统，按照功能合理的拆分，在用户侧能直观的受益点就是，扩容成本可以下降，比如给耗CPU更多的处理微服务扩容计算机型或者给占用更多磁盘空间的微服务扩展存储机型； 从研发视角，架构更合理，每个微服务可以各自迭代。</p>
+
+<h1 id="重要概念">重要概念</h1>
+
+<h2 id="pod">POD</h2>
+
+<p>为何需要pod关于为何需要pod这种容器？为何不直接使用容器？为何甚至需要同时运行多个容器？难道不能简单地把所有进程都放在一个单独的容器中吗？</p>
+
+<p>接下来我们将一一回答上述问题。为何多个容器比单个容器中包含多个进程要好想象一个由多个进程组成的应用程序，无论是通过ipc（进程间通信）还是本地存储文件进行通信，都要求它们运行于同一台机器仁。在Kubemetes中，我们经常在容器中运行进程，由于每一个容器都非常像一台独立的机器，此时你可能认为在单个容器中运行多个进程是合乎逻辑的，然而在实践中这种做法并不合理。<font color="red">容器被设计为每个容器只运行一个进程（除非进程本身产生子进程）。如果在单个容器中运行多个不相关的进程，那么保持所有进程运行、管理它们的日志等将会是我们的责任。</font>例如，我们需要包含一种在进程崩溃时能够自动重启的机制。同时这些进程都将记录到相同的标准输出中，而此时我们将很难确定每个进程分别记录了什么。综上所述，我们需要让每个进程运行于自己的容器中，而这就是<font color="red">Docker和Kubernetes期望使用的方式</font>。</p>
+
+<p>pod 也是<code class="language-plaintext highlighter-rouge">扩缩容的基本单位</code>。</p>
+
+<p>对于在生产中运行的pod，一定要定义一个存活探针<code class="language-plaintext highlighter-rouge">livenessProbe</code>。没有探针的话，Kubernetes无法知道你的应用是否还活着。只要进程还在运行，Kubernetes会认为容器是健康。同样每个pod也可能有自己的owner，owner级联的GC策略，见文件2。</p>
+
+<p><br /></p>
+<h2 id="volume">Volume</h2>
+
+<p><br /></p>
+<h2 id="service">Service</h2>
+
+<p><br /></p>
+<h2 id="replicaset">ReplicaSet</h2>
+<p>了解ReplicaController，但是使用ReplcaSet 而不是ReplicaController</p>
+
+<p><br /></p>
+<h2 id="deployment">Deployment</h2>
+
+<p><br /></p>
+<h2 id="statefulset">StatefulSet</h2>
+
+<p><br /></p>
+<h2 id="crd">CRD</h2>
+
+<h3 id="schema">schema</h3>
+
+<h3 id="event">event</h3>
+
+<h3 id="envtest">envtest</h3>
+
+<h1 id="参考文献">参考文献</h1>
+
+<ol>
+  <li><a href="http://product.dangdang.com/26439199.html">Kubernetes in action 中文版</a></li>
+  <li><a href="https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/">Owners and dependents</a></li>
+  <li><a href="https://book.kubebuilder.io/introduction.html">Kubebuilder</a></li>
+</ol>
+
+
+  </div><a class="u-url" href="/jekyll/update/2021/05/12/kubernetes-notes.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Charming code world</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Charming code world</li><li><a class="u-email" href="mailto:979631775@qq.com">979631775@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

@@ -53,7 +53,7 @@
    <span class="n">MutexLock</span> <span class="n">l</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mutex_</span><span class="p">);</span>
    <span class="k">return</span> <span class="n">snapshots_</span><span class="p">.</span><span class="n">New</span><span class="p">(</span><span class="n">versions_</span><span class="o">-&gt;</span><span class="n">LastSequence</span><span class="p">());</span>
 <span class="p">}</span>
- 
+
 <span class="kt">void</span> <span class="n">DBImpl</span><span class="o">::</span><span class="n">ReleaseSnapshot</span><span class="p">(</span><span class="k">const</span> <span class="n">Snapshot</span><span class="o">*</span> <span class="n">s</span><span class="p">)</span> <span class="p">{</span>
    <span class="n">MutexLock</span> <span class="n">l</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mutex_</span><span class="p">);</span>
    <span class="n">snapshots_</span><span class="p">.</span><span class="n">Delete</span><span class="p">(</span><span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">SnapshotImpl</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">s</span><span class="p">));</span>
@@ -72,8 +72,8 @@
 
 <p>Snapshot的设计核心在于compact中对于GC策略的影响。</p>
 
-<figure class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="k">if</span> <span class="p">(</span><span class="n">snapshots_</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span> <span class="p">{</span>
-   <span class="n">compact</span><span class="o">-&gt;</span><span class="n">smallest_snapshot</span> <span class="o">=</span> <span class="n">versions_</span><span class="o">-&gt;</span><span class="n">LastSequence</span><span class="p">();</span>
+<figure class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="k">if</span> <span class="p">(</span><span class="n">snapshots</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span> <span class="p">{</span>
+   <span class="n">compact</span><span class="o">-&gt;</span><span class="n">smallest_snapshot</span> <span class="o">=</span> <span class="n">versions</span><span class="o">-&gt;</span><span class="n">LastSequence</span><span class="p">();</span>
 <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
    <span class="n">compact</span><span class="o">-&gt;</span><span class="n">smallest_snapshot</span> <span class="o">=</span> <span class="n">snapshots_</span><span class="p">.</span><span class="n">oldest</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">sequence_number</span><span class="p">();</span>
 <span class="p">}</span>
@@ -116,7 +116,7 @@
         <span class="c1">// Therefore this deletion marker is obsolete and can be dropped.</span>
         <span class="n">drop</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
       <span class="p">}</span>
-
+    
       <span class="n">last_sequence_for_key</span> <span class="o">=</span> <span class="n">ikey</span><span class="p">.</span><span class="n">sequence</span><span class="p">;</span>
     <span class="p">}</span></code></pre></figure>
 

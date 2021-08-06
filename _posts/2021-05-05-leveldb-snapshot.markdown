@@ -12,7 +12,7 @@ const Snapshot* DBImpl::GetSnapshot() {
    MutexLock l(&mutex_);
    return snapshots_.New(versions_->LastSequence());
 }
- 
+
 void DBImpl::ReleaseSnapshot(const Snapshot* s) {
    MutexLock l(&mutex_);
    snapshots_.Delete(reinterpret_cast<const SnapshotImpl*>(s));
@@ -31,8 +31,8 @@ void DBImpl::ReleaseSnapshot(const Snapshot* s) {
 Snapshot的设计核心在于compact中对于GC策略的影响。
 
 {% highlight c++ %}
-if (snapshots_.empty()) {
-   compact->smallest_snapshot = versions_->LastSequence();
+if (snapshots.empty()) {
+   compact->smallest_snapshot = versions->LastSequence();
 } else {
    compact->smallest_snapshot = snapshots_.oldest()->sequence_number();
 }
@@ -75,7 +75,7 @@ SequenceNumber last_sequence_for_key = kMaxSequenceNumber;
         // Therefore this deletion marker is obsolete and can be dropped.
         drop = true;
       }
-
+    
       last_sequence_for_key = ikey.sequence;
     }
 {% endhighlight %}
@@ -93,6 +93,6 @@ SequenceNumber last_sequence_for_key = kMaxSequenceNumber;
       仅分了两个组，一个是 <= smallest_snapshot_seq 一个是> smallest_snapshot_seq 数据集；且需要针对单user_key的gc策略产生影响——由于snapshot_seq的存在，导致compact中的delete marker 不能轻易删除了，只能判断大level无此数据才能delete.
 
 * 基于fileset的snapshot(文件级别)
-create snapshot时候trigger flush mem，一个snapshot为file list, 且持久化到manifest中
+  create snapshot时候trigger flush mem，一个snapshot为file list, 且持久化到manifest中
    - 优点：不依赖seq，因为在compact pick时候已经sst file分组，所以不影响compact的user-key gc逻辑就能较彻底的GC;相比基于行的snapshot,因为snapshot引入的空间放大小（基于行级别GC时候，仅以最小sapshot为界，try gc 老部分数据的集合；而基于fileset的可以多个fileset try gc）。
    - 缺点：影响compact pick, 如果snapshot 过多会存在大量文件无法进行compact，导致文件数过多。

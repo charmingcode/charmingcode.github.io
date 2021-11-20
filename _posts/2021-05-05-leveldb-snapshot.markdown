@@ -85,14 +85,16 @@ SequenceNumber last_sequence_for_key = kMaxSequenceNumber;
 * delete marker （要判断这个是当前smallest_snapshot中的最大version的row，且保证high level 无data，即后面没有比这个小的version 的row 需要被此row delete marker gc的数据。）
 
 ### 讨论
-有了snapshot 全局的计算逻辑/比如preAgg/rollup/delete-marker/data gc 都要考虑对snapshot的影响。
+有了snapshot,全局的计算逻辑/比如preAgg/rollup/delete-marker/data gc 都要考虑snapshot的影响。
 
 * 基于seq的snapshot（行级别） 
+   - 用途：很轻量的snapshot, 用于做多版本的读
    - 优点：内存空间占用少，一个snapshot仅记录一个seq即可，且不依赖mem-flush/compact pic，但是依赖seq;
    - 缺点：空间放大较大（如果想GC的更有效，GC策略复杂度大，所有的snapshot下的同一个userkey的最大version都要保留）
       仅分了两个组，一个是 <= smallest_snapshot_seq 一个是> smallest_snapshot_seq 数据集；且需要针对单user_key的gc策略产生影响——由于snapshot_seq的存在，导致compact中的delete marker 不能轻易删除了，只能判断大level无此数据才能delete.
 
 * 基于fileset的snapshot(文件级别)
   create snapshot时候trigger flush mem，一个snapshot为file list, 且持久化到manifest中
+   - 用途：因为已经将mem flush了，可以做云原生/共享存储架构的，remote read, 弹性计算的远程读。
    - 优点：不依赖seq，因为在compact pick时候已经sst file分组，所以不影响compact的user-key gc逻辑就能较彻底的GC;相比基于行的snapshot,因为snapshot引入的空间放大小（基于行级别GC时候，仅以最小sapshot为界，try gc 老部分数据的集合；而基于fileset的可以多个fileset try gc）。
    - 缺点：影响compact pick, 如果snapshot 过多会存在大量文件无法进行compact，导致文件数过多。

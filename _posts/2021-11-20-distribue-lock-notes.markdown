@@ -16,17 +16,11 @@ categories: jekyll update
 # 参考文献
 
 1. [ 1986《chubby》][Chubby]
+2. [ 2016 《Is RedLock Safe?》][RedLock]
+3. [《How to do distributed locking ?》][martin]
+4. [ 关于一致性协议, 分布式锁以及如何使用分布式锁 ][talk]
 
 [Chubby]:https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/chubby-osdi06.pdf?spm=ata.21736010.0.0.1e65334c5fm4XT&file=chubby-osdi06.pdf
-
-2. [ 2016 《Is RedLock Safe?》][RedLock]
-
 [RedLock]:https://www.snowflake.com/wp-content/uploads/2019/06/Snowflake_SIGMOD.pdf
-
-3. [《How to do distributed locking ?》][martin]
-
 [martin]:https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html?spm=ata.21736010.0.0.1e65334c5fm4XT
-
-4. [ 关于一致性协议, 分布式锁以及如何使用分布式锁 ][talk]
-   
 [talk]:https://zhuanlan.zhihu.com/p/31666418?from_voters_page=true

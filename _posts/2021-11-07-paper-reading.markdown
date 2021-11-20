@@ -58,13 +58,9 @@ categories: jekyll update
 # 参考文献
 
 1. [ 1986《The design of postgres》][The design of postgres]
-
-[The design of postgres]:http://db.cs.berkeley.edu/papers/ERL-M87-06.pdf
-
 2. [ 2016 《The Snowflake Elastic Data Warehouse》][Snowflake]
-
-[Snowflake]:https://www.snowflake.com/wp-content/uploads/2019/06/Snowflake_SIGMOD.pdf
-
 3. [2016 Snowflake 弹性数仓（译）][Snowflake chinese]
 
+[The design of postgres]:http://db.cs.berkeley.edu/papers/ERL-M87-06.pdf
+[Snowflake]:https://www.snowflake.com/wp-content/uploads/2019/06/Snowflake_SIGMOD.pdf
 [Snowflake chinese]:https://zhuanlan.zhihu.com/p/357862897

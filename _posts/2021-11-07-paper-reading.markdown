@@ -1,7 +1,7 @@
 ---
 layout: post
-title:  "paper reading 01 - notes[WIP]"
-date:   2021-11-07 21:52:24 +0800
+title:  "paper reading - notes[WIP]"
+date:   2021-11-20 21:52:24 +0800
 categories: jekyll update
 ---
 

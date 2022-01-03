@@ -51,6 +51,10 @@ pod 也是`扩缩容的基本单位`。
 
 ### envtest
 
+# 实践
+
+![k8s_in_action_00]({{ "/assets/imgs/k8s_in_action_00.png" | /assets/imgs/k8s_in_action_00.png }})
+
 # 参考文献
 
 1. [Kubernetes in action 中文版][Kubernetes-in-action]

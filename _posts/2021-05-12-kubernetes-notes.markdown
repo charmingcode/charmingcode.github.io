@@ -53,7 +53,7 @@ pod 也是`扩缩容的基本单位`。
 
 # 实践
 
-![k8s_in_action_00]({{ "/assets/imgs/k8s_in_action_00.png" | https://github.com/charmingcode/charmingcode.github.io/blob/master/_site/assets/imgs/k8s_in_action_00.png }})
+![k8s_in_action_00]({{ "/assets/imgs/k8s_in_action_00.png" | https://github.com/charmingcode/charmingcode.github.io/blob/master/_site/assets/imgs/k8s_in_action_00.png?raw=true }})
 
 # 参考文献
 
